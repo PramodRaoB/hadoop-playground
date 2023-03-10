@@ -40,7 +40,7 @@ def main():
                 row = list(map(int, fin.readline().split()))
                 for j in range(n):
                     if row[j]:
-                        fout.write(f'{matrix_id}, {dims[matrix_id ^ 1]}, {i},{j},{row[j]}\n')
+                        fout.write(f'{matrix_id}, {dims[matrix_id ^ 1]}, {dims[2]}, {i},{j},{row[j]}\n')
 
         m, n, p = get_dims(input_file)
         try:
@@ -48,7 +48,7 @@ def main():
                 try:
                     with open(input_file, "r") as fin:
                         for num_matrices in range(2):
-                            convert_input(fin, fout, num_matrices, [m, p])
+                            convert_input(fin, fout, num_matrices, [m, p, n])
                 except IOError:
                     print('Something went wrong while trying to open the input file on the local FS', file=sys.stderr)
                     exit(1)
