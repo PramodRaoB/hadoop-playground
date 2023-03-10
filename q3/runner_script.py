@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 import argparse
+import os
 import random
 import subprocess
 import sys
+import time
 
 SIMULATION_PER_MAP = 1000000
 MAX_MAP_TASKS = 10
-MAX_RAND = 1e6
+MAX_RAND = 1000000000
 maps = 0
+secret_id = 0
 
 
 def main():
@@ -25,6 +28,10 @@ def main():
     args = vars(parser.parse_args())
 
     # Pre-process (if any)
+    global secret_id
+    random.seed(time.time())
+    secret_id = random.randint(0, MAX_RAND)
+
     def pre_process(input_file: str):
         global maps
         maps = MAX_MAP_TASKS
@@ -42,7 +49,7 @@ def main():
                 break
         for m in range(maps):
             curr = sims // maps + (m < (sims % maps))
-            with open(input_file + str(m) + ".tmp", "w") as fout:
+            with open(input_file + str(m) + str(secret_id) + ".tmp", "w") as fout:
                 fout.write("%d\t%f" % (curr, random.uniform(0, MAX_RAND)))
 
     pre_process(args['local_in_address'])
@@ -51,7 +58,8 @@ def main():
     # Put input on hdfs
     for m in range(maps):
         if subprocess.call(
-                ["hdfs", "dfs", "-put", args['local_in_address'] + str(m) + ".tmp", args['hdfs_in_address'] + str(m)]):
+                ["hdfs", "dfs", "-put", args['local_in_address'] + str(m) + str(secret_id) + ".tmp",
+                 args['hdfs_in_address'] + str(m)]):
             print('Error putting file on HDFS', file=sys.stderr)
             exit(1)
 
@@ -64,6 +72,10 @@ def main():
              reducer, "-reducer", reducer]):
         print('Error running MapReduce application', file=sys.stderr)
         exit(1)
+
+    # Cleaning up
+    for m in range(maps):
+        os.remove(args['local_in_address'] + str(m) + str(secret_id) + ".tmp")
 
 
 if __name__ == "__main__":

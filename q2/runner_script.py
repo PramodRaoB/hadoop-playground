@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 import argparse
+import os
 import subprocess
 import sys
+import random
+import time
+
+MAX_RAND = 1000000000
+secret_id = 0
 
 
 def main():
@@ -19,7 +25,12 @@ def main():
     args = vars(parser.parse_args())
 
     # Pre-process (if any)
+    random.seed(time.time())
+    global secret_id
+    secret_id = random.randint(0, MAX_RAND)
+
     def pre_process(input_file: str, output_file: str):
+
         def get_dims(input_file: str):
             try:
                 with open(input_file, "r") as fin:
@@ -55,8 +66,8 @@ def main():
             print('Something went wrong while opening the HDFS input file directory', file=sys.stderr)
             exit(1)
 
-    pre_process(args['local_in_address'], args['local_in_address'] + ".tmp")
-    args['local_in_address'] += ".tmp"
+    pre_process(args['local_in_address'], args['local_in_address'] + str(secret_id) + ".tmp")
+    args['local_in_address'] += str(secret_id) + ".tmp"
     # End of pre-process
 
     # Put input on hdfs
@@ -73,6 +84,9 @@ def main():
              "-reducer", reducer]):
         print('Error running MapReduce application', file=sys.stderr)
         exit(1)
+
+    # Cleaning up
+    os.remove(args['local_in_address'])
 
 
 if __name__ == "__main__":
