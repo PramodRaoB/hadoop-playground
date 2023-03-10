@@ -18,8 +18,6 @@ def main():
                         help='location to the directory on HDFS containing the mapper(s) and reducer(s)')
     args = vars(parser.parse_args())
 
-    has_pre_process = 0
-
     # Pre-process (if any)
     def pre_process(input_file: str, output_file: str):
         def get_dims(input_file: str):
@@ -40,7 +38,8 @@ def main():
                 row = list(map(int, fin.readline().split()))
                 for j in range(n):
                     if row[j]:
-                        fout.write(f'{matrix_id}, {dims[matrix_id ^ 1]}, {dims[2]}, {i},{j},{row[j]}\n')
+                        # fout.write(f'{matrix_id}, {dims[matrix_id ^ 1]}, {dims[2]}, {i},{j},{row[j]}\n')
+                        fout.write('%d,%d,%d,%d,%d,%d\n' % (matrix_id, dims[matrix_id ^ 1], dims[2], i, j, row[j]))
 
         m, n, p = get_dims(input_file)
         try:
@@ -56,20 +55,21 @@ def main():
             print('Something went wrong while opening the HDFS input file directory', file=sys.stderr)
             exit(1)
 
-    has_pre_process = 1
-    pre_process(args['local_in_address'], args['hdfs_in_address'] + "in")
+    pre_process(args['local_in_address'], args['local_in_address'] + ".tmp")
+    args['local_in_address'] += ".tmp"
     # End of pre-process
 
     # Put input on hdfs
-    if not has_pre_process:
-        if not subprocess.call(["hdfs", "dfs", "-put", args['local_in_address'], args['hdfs_in_address'] + "in"]):
-            print('Error putting file on HDFS', file=sys.stderr)
-            exit(1)
+    if subprocess.call(["hdfs", "dfs", "-put", args['local_in_address'], args['hdfs_in_address'] + "in"]):
+        print('Error putting file on HDFS', file=sys.stderr)
+        exit(1)
 
     # Call MapReduce
-    if not subprocess.call(["hadoop", "jar", args['streaming_jar'], "-input", args['hdfs_in_address'] + "in", "-output",
-                            args['hdfs_out_address'], "-mapper", args["hdfs_exec_address"] + "mapper.py", "-reducer",
-                            args["hdfs_exec_address"] + "reducer.py"]):
+    mapper = args["hdfs_exec_address"] + "mapper.py"
+    reducer = args["hdfs_exec_address"] + "reducer.py"
+    if subprocess.call(["hadoop", "jar", args['streaming_jar'], "-D mapred.reduce.tasks=1", "-files", mapper + "," + reducer, "-input",
+                        args['hdfs_in_address'] + "in", "-output", args['hdfs_out_address'], "-mapper", mapper,
+                        "-reducer", reducer]):
         print('Error running MapReduce application', file=sys.stderr)
         exit(1)
 
