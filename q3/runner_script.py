@@ -9,7 +9,7 @@ import time
 SIMULATION_PER_MAP = 1000000
 MAX_MAP_TASKS = 10
 MAX_RAND = 1000000000
-maps = 0
+maps = MAX_MAP_TASKS
 secret_id = 0
 
 
@@ -47,35 +47,33 @@ def main():
             if per_map <= SIMULATION_PER_MAP:
                 maps = p
                 break
-        for m in range(maps):
-            curr = sims // maps + (m < (sims % maps))
-            with open(input_file + str(m) + str(secret_id) + ".tmp", "w") as fout:
-                fout.write("%d\t%f" % (curr, random.uniform(0, MAX_RAND)))
+        with open(input_file + str(secret_id) + ".tmp", "w") as fout:
+            for m in range(maps):
+                curr = sims // maps + (m < (sims % maps))
+                fout.write("%d\t%f\n" % (curr, random.uniform(0, MAX_RAND)))
 
     pre_process(args['local_in_address'])
     # End of pre-process
 
     # Put input on hdfs
-    for m in range(maps):
-        if subprocess.call(
-                ["hdfs", "dfs", "-put", args['local_in_address'] + str(m) + str(secret_id) + ".tmp",
-                 args['hdfs_in_address'] + str(m)]):
-            print('Error putting file on HDFS', file=sys.stderr)
-            exit(1)
+    if subprocess.call(
+            ["hdfs", "dfs", "-put", args['local_in_address'] + str(secret_id) + ".tmp", args['hdfs_in_address']]):
+        print('Error putting file on HDFS', file=sys.stderr)
+        exit(1)
 
     # Call MapReduce
     mapper = args["hdfs_exec_address"] + "mapper.py"
     reducer = args["hdfs_exec_address"] + "reducer.py"
+    combiner = args["hdfs_exec_address"] + "reducer0.py"
     if subprocess.call(
-            ["hadoop", "jar", args['streaming_jar'], "-D mapred.reduce.tasks=1", "-files", mapper + "," + reducer,
-             "-input", args['hdfs_in_address'], "-output", args['hdfs_out_address'], "-mapper", mapper, "-combiner",
-             reducer, "-reducer", reducer]):
+            ["hadoop", "jar", args['streaming_jar'], "-D mapred.reduce.tasks=1", "-D mapred.map.tasks=" + str(maps),
+             "-files", mapper + "," + reducer + "," + combiner, "-input", args['hdfs_in_address'], "-output",
+             args['hdfs_out_address'], "-mapper", mapper, "-combiner", combiner, "-reducer", reducer]):
         print('Error running MapReduce application', file=sys.stderr)
         exit(1)
 
     # Cleaning up
-    for m in range(maps):
-        os.remove(args['local_in_address'] + str(m) + str(secret_id) + ".tmp")
+    os.remove(args['local_in_address'] + str(secret_id) + ".tmp")
 
 
 if __name__ == "__main__":
