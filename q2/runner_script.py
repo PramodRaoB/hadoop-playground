@@ -48,9 +48,7 @@ def main():
             for i in range(m):
                 row = list(map(int, fin.readline().split()))
                 for j in range(n):
-                    if row[j]:
-                        # fout.write(f'{matrix_id}, {dims[matrix_id ^ 1]}, {dims[2]}, {i},{j},{row[j]}\n')
-                        fout.write('%d,%d,%d,%d,%d,%d\n' % (matrix_id, dims[matrix_id ^ 1], dims[2], i, j, row[j]))
+                    fout.write('%d,%d,%d,%d,%d,%d\n' % (matrix_id, dims[matrix_id ^ 1], dims[2], i, j, row[j]))
 
         m, n, p = get_dims(input_file)
         try:

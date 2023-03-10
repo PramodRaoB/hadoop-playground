@@ -10,7 +10,11 @@ def output_val():
     res = 0
     for x in range(inner):
         res += in_vec[0][x] * in_vec[1][x]
-    print('%s\t%s' % (prev_key, res))
+    # print('%s\t%s' % (prev_key, res))
+    i, j = list(map(int, prev_key.split(",")))
+    if j == 0 and i != 0:
+        print()
+    print(res, end=' ')
     in_vec = [[0] * inner for _ in range(2)]
 
 
