@@ -16,15 +16,21 @@ def output_val():
 
 
 for line in sys.stdin.readlines():
-    k, v = line.split('\t')
-    mat_id, ind, inner, val = list(map(int, v.split(",")))
-    if in_vec is None:
-        in_vec = [[0] * inner for _ in range(2)]
-    if prev_key is not None and k != prev_key:
-        output_val()
+    try:
+        k, v = line.split('\t')
+        try:
+            mat_id, ind, inner, val = list(map(int, v.split(",")))
+            if in_vec is None:
+                in_vec = [[0] * inner for _ in range(2)]
+            if prev_key is not None and k != prev_key:
+                output_val()
 
-    prev_key = k
-    in_vec[mat_id][ind] = val
+            prev_key = k
+            in_vec[mat_id][ind] = val
+        except ValueError:
+            exit(0)
+    except ValueError:
+        exit(0)
 
 if prev_key is not None:
     output_val()

@@ -67,9 +67,10 @@ def main():
     # Call MapReduce
     mapper = args["hdfs_exec_address"] + "mapper.py"
     reducer = args["hdfs_exec_address"] + "reducer.py"
-    if subprocess.call(["hadoop", "jar", args['streaming_jar'], "-D mapred.reduce.tasks=1", "-files", mapper + "," + reducer, "-input",
-                        args['hdfs_in_address'] + "in", "-output", args['hdfs_out_address'], "-mapper", mapper,
-                        "-reducer", reducer]):
+    if subprocess.call(
+            ["hadoop", "jar", args['streaming_jar'], "-D mapred.reduce.tasks=1", "-files", mapper + "," + reducer,
+             "-input", args['hdfs_in_address'] + "in", "-output", args['hdfs_out_address'], "-mapper", mapper,
+             "-reducer", reducer]):
         print('Error running MapReduce application', file=sys.stderr)
         exit(1)
 
