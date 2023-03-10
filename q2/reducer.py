@@ -11,7 +11,6 @@ def output_val():
     for x in range(inner):
         res += in_vec[0][x] * in_vec[1][x]
     print('%s\t%s' % (prev_key, res))
-    res = 0
     in_vec = [[0] * inner for _ in range(2)]
 
 
