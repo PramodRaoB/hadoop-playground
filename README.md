@@ -1,2 +1,2 @@
 # hadoop-playground
-Playing around hadoop using some examples
+Some exercises to get familiar with Hadoop

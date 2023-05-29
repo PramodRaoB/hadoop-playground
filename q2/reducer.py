@@ -4,6 +4,8 @@ import sys
 prev_key = None
 in_vec = None
 
+final = {}
+
 
 def output_val():
     global in_vec
@@ -12,9 +14,7 @@ def output_val():
         res += in_vec[0][x] * in_vec[1][x]
     # print('%s\t%s' % (prev_key, res))
     i, j = list(map(int, prev_key.split(",")))
-    if j == 0 and i != 0:
-        print()
-    print(res, end=' ')
+    final[(i, j)] = res
     in_vec = [[0] * inner for _ in range(2)]
 
 
@@ -37,3 +37,9 @@ for line in sys.stdin.readlines():
 
 if prev_key is not None:
     output_val()
+
+for k in sorted(final.keys()):
+    i, j = k
+    if j == 0 and i != 0:
+        print()
+    print(final[k], end=' ')
